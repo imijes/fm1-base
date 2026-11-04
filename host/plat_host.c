@@ -24,7 +24,8 @@
  *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
  *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
  *   wav FILE | wavstop           start / stop recording the output
- *   jack 0|1                     the headphone jack empty, or something in it (APP_SPEAKER; 1 by default)
+ *   xrun                         a missed deadline, as the device counts them (plat_xruns)
+ *                                (also 1 / 0; APP_SPEAKER's jack is 1 until a script says)
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
  *   leds                         print the lit buttons and keys (keys: # bright, + dim)
@@ -1498,7 +1499,8 @@ static void ds_fill(ds_rec_t *r)                    /* what the simulator has of
     app_stats(r->app);
 #endif
 }
-uint32_t plat_xruns(void) { return 0; }
+static uint32_t sim_xruns;                       /* xrun: a missed deadline, as the device counts it */
+uint32_t plat_xruns(void) { return sim_xruns; }
 void plat_code_window(const void *end) { (void)end; }
 /* disk mode: no computer in the simulator; the app's screen and flush still run */
 static const plat_disk_t *host_disk;
@@ -2553,7 +2555,10 @@ int main(int argc, char **argv)
             run_ms(1);
             plat_host_exact = 0;
         } else if (!strcmp(cmd, "jack")) {          /* jack in | jack out: the headphone jack (plat_headphones) */
-            host_hp = !strcmp(a, "in");
+            host_hp = !strcmp(a, "in") || !strcmp(a, "1");
+#ifdef APP_SPEAKER
+            sim_jack = host_hp;                     /* (APP_SPEAKER's jack: 1 by default) */
+#endif
             run_ms(2);
         } else if (!strcmp(cmd, "master")) {
             master = (uint32_t)atoi(a);
@@ -2611,10 +2616,8 @@ int main(int argc, char **argv)
             wav_open(out);
         } else if (!strcmp(cmd, "wavstop"))
             wav_close();
-#ifdef APP_SPEAKER
-        else if (!strcmp(cmd, "jack"))             /* jack 0|1: the headphone jack empty, or something in it */
-            sim_jack = atoi(a);
-#endif
+        else if (!strcmp(cmd, "xrun"))             /* xrun: a missed deadline */
+            sim_xruns++;
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
         else if (!strcmp(cmd, "shot")) {
