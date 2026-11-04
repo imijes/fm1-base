@@ -23,9 +23,11 @@
  *                                stand-in stack is ready a second after the start)
  *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
  *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
+ *                                (also 1 / 0; APP_SPEAKER's jack is 1 until a script says)
  *   wav FILE | wavstop           start / stop recording the output
  *   usbwav FILE | usbwavstop     start / stop recording the USB audio input as a computer gets it: usb_audio_channels
  *                                (FM1B_UAC_CH) of 16 bits, the master on 1 and 2, the app's own after it (plat_usb_ch)
+ *   xrun                         a missed deadline, as the device counts them (plat_xruns)
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
  *   leds                         print the lit buttons and keys (keys: # bright, + dim)
@@ -1521,7 +1523,8 @@ static void ds_fill(ds_rec_t *r)                    /* what the simulator has of
     app_stats(r->app);
 #endif
 }
-uint32_t plat_xruns(void) { return 0; }
+static uint32_t sim_xruns;                       /* xrun: a missed deadline, as the device counts it */
+uint32_t plat_xruns(void) { return sim_xruns; }
 void plat_code_window(const void *end) { (void)end; }
 /* disk mode: no computer in the simulator; the app's screen and flush still run */
 static const plat_disk_t *host_disk;
@@ -2697,6 +2700,8 @@ int main(int argc, char **argv)
                 wav_end(uwav, uwav_frames, FM1B_UAC_CH);
             uwav = 0;
         }
+        else if (!strcmp(cmd, "xrun"))             /* xrun: a missed deadline */
+            sim_xruns++;
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
         else if (!strcmp(cmd, "shot")) {
