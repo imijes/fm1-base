@@ -99,6 +99,9 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
                     o[2u * k + i] = 0;
             }
 #endif
+#ifdef APP_SPEAKER
+            app_speaker(o + 2u * k, REND_FRAMES, (int)fm1_hp_in());   /* (after the USB audio input's tap and Bluetooth) */
+#endif
         }
     }
     us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;

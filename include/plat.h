@@ -602,6 +602,9 @@ int app_stats_quiet(void);
  *   APP_BATTERY_RAW (no function) plat_battery_raw is built (the battery's reading, for an app's own volts)
  *   APP_CPU_KHZ     (no function) plat_cpu_khz is built (the CPU's clock)
  *   APP_DIM_LEVELS  (no function) plat_dim_ns is built (the dim lights at any of many brightnesses)
+ *   APP_SPEAKER     void app_speaker(int32_t *lr, uint32_t n, int jack)   what the speaker and headphones get, after the
+ *                   USB audio input's tap and Bluetooth's feed; jack: 1 something in the headphone jack, which cuts the
+ *                   speaker (the speaker plays the left channel alone). In the audio interrupt
  *   APP_QUIET       void app_quiet(int32_t *lr, uint32_t n)   the render while the flash must not be read (the
  *                   radio's first second, FM1B_BLE): keep time without sound (default: silence)
  *   APP_KEY_SENSE   void app_key_sample(uint32_t key, uint32_t v, uint32_t ticks, int driven) (rows PA7 / PA8),

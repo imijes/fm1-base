@@ -24,6 +24,7 @@
  *   bta add NAME | bta drop NAME a Bluetooth audio device around, or gone (FM1B_BT_AUDIO: a link to it is lost)
  *   jack in | jack out           headphones into the jack, or out (plat_headphones; nothing plugged at the start)
  *   wav FILE | wavstop           start / stop recording the output
+ *   jack 0|1                     the headphone jack empty, or something in it (APP_SPEAKER; 1 by default)
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
  *   leds                         print the lit buttons and keys (keys: # bright, + dim)
@@ -1963,6 +1964,10 @@ static void sim_ms_begin(uint32_t ms)
 #endif
 }
 
+#ifdef APP_SPEAKER
+static int sim_jack = 1;                        /* jack 0|1: the headphone jack; in by default (a computer's own speakers) */
+#endif
+
 static void sim_render(int32_t *blk)            /* one APP_BLOCK-frame block, as the device renders it */
 {
     double t0 = now_ns(), dt;
@@ -1973,6 +1978,9 @@ static void sim_render(int32_t *blk)            /* one APP_BLOCK-frame block, as
         for (k = 0; k < 2u * APP_BLOCK; k++)
             blk[k] = (int32_t)((float)blk[k] * g);
     }
+#ifdef APP_SPEAKER
+    app_speaker(blk, APP_BLOCK, sim_jack);
+#endif
     dt = now_ns() - t0;
     render_ns_total += dt;
     render_budget_ns_total += APP_BLOCK * 1e9 / 44100.0;
@@ -2603,6 +2611,10 @@ int main(int argc, char **argv)
             wav_open(out);
         } else if (!strcmp(cmd, "wavstop"))
             wav_close();
+#ifdef APP_SPEAKER
+        else if (!strcmp(cmd, "jack"))             /* jack 0|1: the headphone jack empty, or something in it */
+            sim_jack = atoi(a);
+#endif
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
         else if (!strcmp(cmd, "shot")) {
