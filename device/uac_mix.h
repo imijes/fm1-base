@@ -15,14 +15,17 @@
 
 /* o: n stereo frames of the render (24-bit, as the I2S takes them; at 4096 when full, else at gain); gain: MASTER's gain
  * (APP_GAIN), put on after the tap when full; master: MASTER's position 0..4096; play_q12: the computer's audio's level,
- * 0 muted .. 4096 as sent */
+ * 0 muted .. 4096 as sent, or UAC_MIX_ROUTED: the app took the computer's audio as its input (plat_usb_audio_route),
+ * so it is not read again here */
+#define UAC_MIX_ROUTED 0xFFFFFFFFu
 static inline void uac_mix(int32_t *o, uint32_t n, uint32_t gain, uint32_t master, int full, uint32_t play_q12)
 {
 #if FELUCCA_UAC
     uac_tap(o, n);                                  /* the USB audio input: the app's output, before the computer's */
 #endif
 #if FELUCCA_UAC_OUT
-    uac_play(o, n, full ? play_q12 : (master * master >> 12) * play_q12 >> 12);   /* the computer's audio, at MASTER */
+    if (play_q12 != UAC_MIX_ROUTED)
+        uac_play(o, n, full ? play_q12 : (master * master >> 12) * play_q12 >> 12);   /* the computer's audio, at MASTER */
 #else
     (void)master, (void)play_q12;
 #endif
