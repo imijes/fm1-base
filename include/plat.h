@@ -445,6 +445,13 @@ void plat_usb_audio_full(int on);
  * before the computer's audio is mixed in, whatever this is: recording the FM-1 never records the computer's own
  * playback (device/uac_mix.h). Without usb_audio_out, nothing */
 void plat_usb_play_gain(uint32_t q12);
+/* USB audio output as the app's input (FM1B_UAC_OUT): on, the computer's audio is the app's to use (a synth's external
+ * input: through its filter and amplifier) and no longer plays after it; off (the default), it plays at MASTER after
+ * the app's render. Read once a render: a change takes the next */
+void plat_usb_audio_route(int on);
+/* during app_render, the route on: the computer's audio for this render's frames, stereo interleaved, 24-bit as
+ * app_render's lr at full level (+-8388607; silence while nothing plays); 0 with the route off (or no USB audio) */
+const int32_t *plat_usb_audio_in(void);
 
 /* the keys' velocity and pressure (an app with APP_KEY_SENSE): on, the scan reads the keys on the analog rows and
  * hands each reading to the app (app_key_sample, app_key_probe); off by default */
