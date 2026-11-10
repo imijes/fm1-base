@@ -73,6 +73,7 @@ static struct {
                                                     * announced (LMP_set_AFH) and due at afh_at (CLKN slots, bp_alarm) */
     uint32_t afh_at, afh_switches;
 } bp;
+static volatile uint32_t bp_rssi;                  /* the RSSI readback (BR §10.3) at the link's last good packet, 0: none */
 #define BP_CH_SEC 30u                              /* the channel assessment's window, s (~2 answers a channel a second) */
 #define BP_AFH_AHEAD 320u                          /* the switch this many slots (200 ms) after its announcement */
 /* the audio packets (bt_acl.c ba_media_send, from the audio interrupt): whole L2CAP frames, each one DH5 (or DH3 / DH1
@@ -234,6 +235,7 @@ static void bp_conn_enter(void)                    /* BR §8.3 sub-state 2 -> th
         f->linkcntl[i] |= 1u << 14;
     }
     bti.mode = BTI_M_CONN;
+    bp_rssi = 0;
 #if FELUCCA_BT_AUDIO
     for (i = 0; i < 2u; i++)
         f->linkcntl[i] &= (uint16_t)~(1u << 7 | 1u << 15);   /* (a new link: no encryption until it is started) */
@@ -358,6 +360,7 @@ static void bp_conn_rx(void)                       /* a packet in the connection
             bp.good++;
             bp_good_note(f);
             bp.last_good_ms = fm1_ms;
+            bp_rssi = fm1_br_agc3() & 0x3FFFu;
             if (FELUCCA_BT_DIAG) {
                 uint32_t b = f->rxbit & 0x3FFu;
                 bp.rb_sum += b;

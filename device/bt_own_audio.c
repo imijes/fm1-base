@@ -276,6 +276,16 @@ void plat_bta_forget(int i)
     bta.key_new = 1;
 }
 void plat_bta_hangup(void) { bta_hangup(); }
+int plat_bta_rssi(void)                           /* the link's signal, about dBm (as plat_ble_rssi: the gain table
+                                                   * not transcribed, a step a dB) -> 0: no link */
+{
+    const uint32_t r = bp_rssi;
+    int v;
+    if (bti.mode != BTI_M_CONN || !r)
+        return 0;
+    v = 21 - (int)(r & 63u) - (int)(r >> 8 & 63u);
+    return v < -127 ? -127 : v > -1 ? -1 : v;
+}
 int plat_bta_state(void) { return (int)bta_state(); }   /* PLAT_BTA_S_* (the same values as bt_audio.h's BTA_S_*) */
 void plat_bta_output(int to_device) { bta_output(to_device != 0); }   /* (streaming only: bt_audio.c) */
 int plat_bta_out_device(void) { return bta_out_bt(); }

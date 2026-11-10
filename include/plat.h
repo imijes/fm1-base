@@ -279,6 +279,7 @@ int plat_bta_reconnect(int i);         /* connect remembered device i -> 0 pagin
 void plat_bta_forget(int i);
 void plat_bta_hangup(void);
 int plat_bta_state(void);              /* PLAT_BTA_* */
+int plat_bta_rssi(void);               /* a link up: its signal strength, about dBm (as plat_ble_rssi); 0: none */
 /* while it streams, where the sound goes: 1 the device, 0 the FM-1's own output (the stream suspended, the link
  * kept: back to the device at once, without a new connection) */
 void plat_bta_output(int to_device);

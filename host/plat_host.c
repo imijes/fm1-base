@@ -859,6 +859,7 @@ void plat_bta_hangup(void)
         bth_st = bth_rest();
 }
 int plat_bta_state(void) { return bth_st; }
+int plat_bta_rssi(void) { return bth_st >= PLAT_BTA_LINKED && bth_st <= PLAT_BTA_STREAMING ? -40 : 0; }
 void plat_bta_output(int to_device)
 {
     if (bth_st == PLAT_BTA_STREAMING)
