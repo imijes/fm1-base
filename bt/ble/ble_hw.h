@@ -73,6 +73,9 @@ struct ble_hw_conn {
 BLE_API void ble_hw_conn_start(const struct ble_hw_conn *c);
 /* leave the connection now (the engine stops; no more ble_ll_hw_* calls for it) */
 BLE_API void ble_hw_conn_stop(void);
+/* the link's signal: the engine's RSSI word (HW §3 RSSI2, as ble_scan.h's) of the last good packet heard on the
+ * connection (empty and repeated ones too, so every event), 0: none since ble_hw_conn_start */
+BLE_API uint16_t ble_hw_conn_rssi(void);
 
 /* (as master, HW §21.4: the same call; the driver writes the master's values at instant - 1) */
 struct ble_hw_conn_upd {

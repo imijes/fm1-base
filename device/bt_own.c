@@ -420,7 +420,19 @@ static void ble_poll(void)
 static uint8_t ble_off;                           /* switched off by the player (plat_ble_enable) */
 int plat_ble_state(void) { return ble_off ? BLE_OFF : ble_state; }
 int plat_ble_connected(void) { return !ble_off && ble_state == BLE_READY && ble_midi_peripheral_connected(); }
-int plat_ble_rssi(int link) { (void)link; return 0; }   /* (not yet: the own controller keeps no link's reading) */
+/* the link's signal, from the engine's RSSI word of its last good packet (ble_hw_conn_rssi): dBm = 21 - fine - T[gain]
+ * (BLE-HW-FACTS §3 0x138), the gain table T not transcribed (U9): each gain step taken as 1 dB, so the dBm are
+ * approximate; nearer is higher all the same, as PROX needs (its calibration sets the range). 0: no reading, or
+ * not that link (one at a time: link 0 a computer connected to us, link 1 we to a device) */
+int plat_ble_rssi(int link)
+{
+    const uint32_t r = ble_hw_conn_rssi();
+    int v;
+    if (ble_off || ble_state != BLE_READY || !r || own_role != (link == 0 ? 1u : 2u))
+        return 0;
+    v = 21 - (int)(r & 63u) - (int)(r >> 8 & 63u);
+    return v < -127 ? -127 : v > -1 ? -1 : v;
+}
 int plat_ble_linked(void) { return !ble_off && ble_state == BLE_READY && ble_midi_peripheral_linked(); }
 void plat_ble_link_info(uint32_t v[7])            /* the computer's link as agreed (0 each: none) */
 {

@@ -7,6 +7,7 @@
 BLE_API void ble_hw_adv_start(const struct ble_hw_adv *a) { (void)a; }
 BLE_API void ble_hw_adv_stop(void) {}
 BLE_API void ble_hw_conn_start(const struct ble_hw_conn *c) { (void)c; }
+BLE_API uint16_t ble_hw_conn_rssi(void) { return 0; }
 BLE_API void ble_hw_conn_stop(void) {}
 BLE_API void ble_hw_conn_update(const struct ble_hw_conn_upd *u) { (void)u; }
 BLE_API void ble_hw_chmap_update(const uint8_t chm[5], uint16_t instant)

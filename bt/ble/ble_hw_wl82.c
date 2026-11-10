@@ -158,6 +158,8 @@ struct ble_hw_stats {
     uint32_t events, rx, rx_repeat, rx_error, tx, acked, connects, late_instant, isr_max_ticks;
 };
 static struct ble_hw_stats ble_hw_stat;
+static volatile uint16_t hw_conn_rssi;                     /* ble_hw_conn_rssi: the last good packet's RSSI word */
+BLE_API uint16_t ble_hw_conn_rssi(void) { return hw_conn_rssi; }
 
 /* ------------------------------------------------------------------------------- diagnostics (blell) --- */
 
@@ -500,6 +502,7 @@ BLE_API void ble_hw_adv_stop(void)
 BLE_API void ble_hw_conn_start(const struct ble_hw_conn *c)
 {
     uint16_t h0;
+    hw_conn_rssi = 0;                                      /* (a new link: no reading yet) */
     cb_rfprio(28u);                                        /* 1 */
     CB->anchor = 0x8000u;
     CB->txtog &= (uint16_t)~2u;
@@ -952,7 +955,10 @@ static void hw_rx_service(void)
                                                             * supervision timer resets on nothing else (Core Vol 6
                                                             * Part B 4.5.2); CRC-failed receptions kept a switched-off
                                                             * central's link CONNECTED for ever */
+        {
             drv.rx_seen = drv.rx_any = 1;
+            hw_conn_rssi = CB->rssi[2];                    /* (its signal, as a scan report's: ble_hw_conn_rssi) */
+        }
         if (!hwd.first_rx) {                               /* (diagnostics) the first packet of this connection */
             hwd.first_rx = 1;
             BLE_DG(ble_dg.first_rx_us = (fm1_ticks() - hwd.conn_t0) / FM1_TICKS_PER_US);
